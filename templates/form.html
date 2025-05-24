@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Ипотечный калькулятор</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2em; background: #f9f9f9; }
+    form { background: #fff; padding: 1.5em; box-shadow: 0 5px 30px #2c3e50; max-width: 350px; margin: auto; }
+    label { display: block; margin-top: 1em; }
+    input { width: 100%; padding: 0.5em; margin-top: 0.4em; }
+    button { margin-top: 1.5em; padding: 0.7em 1.2em; }
+  </style>
+</head>
+<body>
+  <h1>Ипотечный калькулятор</h1>
+  <form action="/расчёт_ипотеки" method="post">
+    <label>Зарплата, ₽/мес:
+        <input type="number" name="salary" required min="1" step="any" placeholder="50000">
+    </label>
+    <label>Сумма кредита, ₽:
+        <input type="number" name="loan_amount" required min="1" step="any" placeholder="3000000">
+    </label>
+    <label>Срок, лет:
+        <input type="number" name="loan_term_years" required min="1" placeholder="20">
+    </label>
+    <label>Инфляция, %:
+        <input type="number" name="inflation_rate" required min="0" step="any" placeholder="5">
+    </label>
+    <label>Доля зарплаты на вклад (%):
+        <input type="number" name="deposit_share_pct" min="0" max="100" step="1" required placeholder="50">
+    </label>
+    <label>Период накопления (лет):
+        <input type="number" name="deposit_delay_years" min="0" step="1" required placeholder="2">
+    </label>
+
+    <button type="submit">Рассчитать</button>
+  </form>
+</body>
+</html>

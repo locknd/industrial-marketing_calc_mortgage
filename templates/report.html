@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>Сравнение ипотек</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; color: #333; }
+    h1 { font-size: 2em; color: #2c3e50; }
+    .subtitle { font-size: 1rem; color: #555; margin-bottom: 1em; }
+    table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; }
+    th { background: #ecf0f1; color: #2c3e50; }
+    tr:nth-child(even) { background: #fafafa; }
+    tr:hover { background: #f1f1f1; }
+    caption { caption-side: bottom; margin-top: 0.5em; font-weight: bold; }
+    h2 { margin-top: 40px; color: #2c3e50; }
+    h3 { margin-top: 25px; color: #34495e; }
+    a { display: inline-block; margin-top: 1.5em; color: #2c3e50; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .monthly-table { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1>Где выгоднее взять ипотеку?</h1>
+  <p class="subtitle">
+    Зарплата: <strong>{{ salary }}₽/мес</strong>,
+    сумма кредита: <strong>{{ loan_amount }}₽</strong>,
+    срок: <strong>{{ loan_term_years }} лет</strong>,
+    инфляция: <strong>{{ inflation_rate }}%</strong>.
+  </p>
+  <p class="subtitle">
+    Доля зарплаты на вклад: <strong>{{ deposit_share_pct }}%</strong>,
+    период накопления: <strong>{{ deposit_delay_years }} лет</strong>.
+  </p>
+
+  <table>
+    <tr>
+      <th>Банк</th>
+      <th>Платёж сейчас, ₽/мес</th>
+      <th>Всего выплат, ₽</th>
+      <th>Платёж после вклада, ₽/мес</th>
+      <th>Всего выплат после вклада, ₽</th>
+      <th>Номинал выплат, ₽</th>
+      <th>Полная стоимость кредита сейчас, %</th>
+      <th>Полная стоимость кредита после вклада, %</th>
+    </tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r['bank'] }}</td>
+      <td>{{ "{:,}".format(r['pay_now']|int) if r['pay_now'] is defined else "—" }}</td>
+      <td>{{ "{:,}".format(r['real_now']|int) if r['real_now'] is defined else "—" }}</td>
+      <td>{{ "{:,}".format(r['pay_later']|int) if r['pay_later'] is defined else "—" }}</td>
+      <td>{{ "{:,}".format(r['real_later']|int) if r['real_later'] is defined else "—" }}</td>
+      <td>{{ "{:,}".format(r['nominal_now']|int) if r['nominal_now'] is defined else "—" }}</td>
+      <td>{{ "{:,.0f}".format(r['full_cost_now']) if r['full_cost_now'] is defined else "—" }}</td>
+      <td>{{ "{:,.0f}".format(r['full_cost_later']) if r['full_cost_later'] is defined else "—" }}</td>
+    </tr>
+    {% endfor %}
+    <caption>Сравнение пяти банков по двум сценариям</caption>
+  </table>
+
+  <h2>Графики погашения по годам</h2>
+  {% for bank in schedules_now.keys() %}
+    <h3>{{ bank }}</h3>
+    <!-- Сценарий A -->
+    <p><em>Ипотека сразу:</em></p>
+    <table>
+      <tr>
+        <th>Год</th>
+        <th>Годовой платёж, ₽</th>
+        <th>Проценты, ₽</th>
+        <th>Погашено основного долга, ₽</th>
+        <th>Остаток долга, ₽</th>
+      </tr>
+      {% for y in schedules_now[bank] %}
+        <tr>
+          <td>{{ y['year'] }}</td>
+          <td>{{ "{:,}".format(y.get('payment', 0)|int) }}</td>
+          <td>{{ "{:,}".format(y.get('interest', 0)|int) }}</td>
+          <td>{{ "{:,.0f}".format(y.get('principal_paid', 0)) }}</td>
+          <td>{{ "{:,}".format(y.get('balance', 0)|int) }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+    <!-- Сценарий B -->
+    <p><em>Ипотека после накоплений:</em></p>
+    <table>
+      <tr>
+        <th>Год</th>
+        <th>Годовой платёж, ₽</th>
+        <th>Проценты, ₽</th>
+        <th>Погашено основного долга, ₽</th>
+        <th>Остаток долга, ₽</th>
+      </tr>
+      {% for y in schedules_later[bank] %}
+        <tr>
+          <td>{{ y['year'] }}</td>
+          <td>{{ "{:,}".format(y.get('payment', 0)|int) }}</td>
+          <td>{{ "{:,}".format(y.get('interest', 0)|int) }}</td>
+          <td>{{ "{:,.0f}".format(y.get('principal_paid', 0)) }}</td>
+          <td>{{ "{:,}".format(y.get('balance', 0)|int) }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <!-- Помесячные графики (первый год) -->
+    <p><em>Помесячный график первого года - Ипотека сразу:</em></p>
+    <table>
+      <tr>
+        <th>Месяц и год</th>
+        <th>Месячный платёж, ₽</th>
+        <th>Проценты, ₽</th>
+        <th>Погашено основного долга, ₽</th>
+        <th>Остаток долга, ₽</th>
+      </tr>
+      {% for m in monthly_schedules[bank]["now"][:12] %}
+        <tr>
+          <td>{{ m['month'] }}</td>
+          <td>{{ "{:,}".format(m.get('payment', 0)|int) }}</td>
+          <td>{{ "{:,}".format(m.get('interest', 0)|int) }}</td>
+          <td>{{ "{:,.0f}".format(m.get('principal', 0)) }}</td>
+          <td>{{ "{:,}".format(m.get('balance', 0)|int) }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <p><em>Помесячный график первого года - Ипотека после накоплений:</em></p>
+    <table>
+      <tr>
+        <th>Месяц и год</th>
+        <th>Месячный платёж, ₽</th>
+        <th>Проценты, ₽</th>
+        <th>Погашено основного долга, ₽</th>
+        <th>Остаток долга, ₽</th>
+      </tr>
+      {% for m in monthly_schedules[bank]["later"][:12] %}
+        <tr>
+          <td>{{ m['month'] }}</td>
+          <td>{{ "{:,}".format(m.get('payment', 0)|int) }}</td>
+          <td>{{ "{:,}".format(m.get('interest', 0)|int) }}</td>
+          <td>{{ "{:,.0f}".format(m.get('principal', 0)) }}</td>
+          <td>{{ "{:,}".format(m.get('balance', 0)|int) }}</td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endfor %}
+
+  <a href="/">← Вернуться к расчёту</a>
+</body>
+</html>
