@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates       # Шаблонизатор 
 from fastapi.responses import HTMLResponse           # Класс-ответ для возврата HTML
 from datetime import datetime, date
 from babel.dates import format_date
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 # ---------------------------------------------
 # Инициализация приложения и указание папки с шаблонами
@@ -25,7 +25,7 @@ def amortization_schedule(
     years: int,
     start_year: int = 2025,
     start_month: int = 3
-) -> (List[Dict], List[Dict]):
+) -> Tuple[List[Dict], List[Dict]]:
     """
     Возвращает два списка:
       1) schedule: список словарей с графиком погашения кредита по годам:
